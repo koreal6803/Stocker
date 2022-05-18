@@ -43,10 +43,10 @@ class Stocker():
         self.max_price_date = self.max_price_date[self.max_price_date.index[0]]
         
         # The starting price (starting with the opening price)
-        self.starting_price = float(self.stock.ix[0, 'Adj. Open'])
+        self.starting_price = float(self.stock['Adj. Open'].iloc[0])
         
         # The most recent price
-        self.most_recent_price = float(self.stock.ix[len(self.stock) - 1, 'y'])
+        self.most_recent_price = float(self.stock['y'].iloc[len(self.stock) - 1])
 
         # Whether or not to round dates
         self.round_dates = True
