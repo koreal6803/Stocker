@@ -903,7 +903,7 @@ class Stocker():
         
         # Iterate through all the changepoints and make models
         for i, prior in enumerate(changepoint_priors):
-            results['cps'].[i] = prior
+            results['cps'].iloc[i] = prior
             
             # Select the changepoint
             self.changepoint_prior_scale = prior
