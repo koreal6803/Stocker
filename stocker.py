@@ -222,7 +222,7 @@ class Stocker():
             
             print('Maximum {} = {:.2f} on {}.'.format(stat, stat_max, date_stat_max))
             print('Minimum {} = {:.2f} on {}.'.format(stat, stat_min, date_stat_min))
-            print('Current {} = {:.2f} on {}.\n'.format(stat, self.stock.ix[len(self.stock) - 1, stat], self.max_date.date()))
+            print('Current {} = {:.2f} on {}.\n'.format(stat, self.stock[stat].iloc[len(self.stock) - 1], self.max_date.date()))
             
             # Percentage y-axis
             if plot_type == 'pct':
@@ -433,7 +433,7 @@ class Stocker():
         if days > 0:
             # Print the predicted price
             print('Predicted Price on {} = ${:.2f}'.format(
-                future.ix[len(future) - 1, 'ds'], future.ix[len(future) - 1, 'yhat']))
+                future['ds'].iloc[len(future) - 1], future['yhat'].iloc[len(future) - 1]))
 
             title = '%s Historical and Predicted Stock Price'  % self.symbol
         else:
@@ -514,8 +514,8 @@ class Stocker():
         test['in_range'] = False
 
         for i in test.index:
-            if (test.ix[i, 'y'] < test.ix[i, 'yhat_upper']) & (test.ix[i, 'y'] > test.ix[i, 'yhat_lower']):
-                test.ix[i, 'in_range'] = True
+            if (test['y'].iloc[i] < test['yhat_upper'].iloc[i]) & (test['y'].iloc[i] > test['yhat_lower'].iloc[i]):
+                test['in_range'].iloc[i] = True
 
         in_range_accuracy = 100 * np.mean(test['in_range'])
 
@@ -526,8 +526,8 @@ class Stocker():
                 end_date))
 
             # Final prediction vs actual value
-            print('\nPredicted price on {} = ${:.2f}.'.format(max(future['ds']), future.ix[len(future) - 1, 'yhat']))
-            print('Actual price on    {} = ${:.2f}.\n'.format(max(test['ds']), test.ix[len(test) - 1, 'y']))
+            print('\nPredicted price on {} = ${:.2f}.'.format(max(future['ds']), future['yhat'].iloc[len(future) - 1]))
+            print('Actual price on    {} = ${:.2f}.\n'.format(max(test['ds']), test['y'].iloc[len(test) - 1]))
 
             print('Average Absolute Error on Training Data = ${:.2f}.'.format(train_mean_error))
             print('Average Absolute Error on Testing  Data = ${:.2f}.\n'.format(test_mean_error))
@@ -583,20 +583,20 @@ class Stocker():
                 
                 # If we predicted up and the price goes up, we gain the difference
                 if correct == 1:
-                    prediction_profit.append(nshares * test_pred_increase.ix[i, 'real_diff'])
+                    prediction_profit.append(nshares * test_pred_increase['real_diff'].iloc[i])
                 # If we predicted up and the price goes down, we lose the difference
                 else:
-                    prediction_profit.append(nshares * test_pred_increase.ix[i, 'real_diff'])
+                    prediction_profit.append(nshares * test_pred_increase['real_diff'].iloc[i])
             
             test_pred_increase['pred_profit'] = prediction_profit
             
             # Put the profit into the test dataframe
             test = pd.merge(test, test_pred_increase[['ds', 'pred_profit']], on = 'ds', how = 'left')
-            test.ix[0, 'pred_profit'] = 0
+            test['pred_profit'].iloc[0] = 0
         
             # Profit for either method at all dates
             test['pred_profit'] = test['pred_profit'].cumsum().ffill()
-            test['hold_profit'] = nshares * (test['y'] - float(test.ix[0, 'y']))
+            test['hold_profit'] = nshares * (test['y'] - float(test['y'].iloc[0]))
             
             # Display information
             print('You played the stock market in {} from {} to {} with {} shares.\n'.format(
@@ -607,7 +607,7 @@ class Stocker():
 
             # Display some friendly information about the perils of playing the stock market
             print('The total profit using the Prophet model = ${:.2f}.'.format(np.sum(prediction_profit)))
-            print('The Buy and Hold strategy profit =         ${:.2f}.'.format(float(test.ix[len(test) - 1, 'hold_profit'])))
+            print('The Buy and Hold strategy profit =         ${:.2f}.'.format(float(test['hold_profit'].iloc[len(test) - 1])))
             print('\nThanks for playing the stock market!\n')
             
            
@@ -616,11 +616,11 @@ class Stocker():
             self.reset_plot()
             
             # Final profit and final smart used for locating text
-            final_profit = test.ix[len(test) - 1, 'pred_profit']
-            final_smart = test.ix[len(test) - 1, 'hold_profit']
+            final_profit = test['pred_profit'].iloc[len(test) - 1]
+            final_smart = test['hold_profit'].iloc[len(test) - 1]
 
             # text location
-            last_date = test.ix[len(test) - 1, 'ds']
+            last_date = test['ds'].iloc[len(test) - 1]
             text_location = (last_date - pd.DateOffset(months = 1))
 
             plt.style.use('dark_background')
@@ -700,7 +700,7 @@ class Stocker():
         for changepoint in (changepoints):
             change_indices.append(train[train['ds'] == changepoint].index[0])
         
-        c_data = train.ix[change_indices, :]
+        c_data = train.iloc[change_indices, :]
         deltas = model.params['delta'][0]
         
         c_data['delta'] = deltas
@@ -720,7 +720,7 @@ class Stocker():
         if not search:
         
             print('\nChangepoints sorted by slope rate of change (2nd derivative):\n')
-            print(c_data.ix[:, ['Date', 'Adj. Close', 'delta']][:5])
+            print(c_data[['Date', 'Adj. Close', 'delta']][:5])
 
             # Line plot showing actual values, estimated values, and changepoints
             self.reset_plot()
@@ -903,7 +903,7 @@ class Stocker():
         
         # Iterate through all the changepoints and make models
         for i, prior in enumerate(changepoint_priors):
-            results.ix[i, 'cps'] = prior
+            results['cps'].[i] = prior
             
             # Select the changepoint
             self.changepoint_prior_scale = prior
@@ -920,16 +920,16 @@ class Stocker():
             avg_train_error = np.mean(abs(train_results['y'] - train_results['yhat']))
             avg_train_uncertainty = np.mean(abs(train_results['yhat_upper'] - train_results['yhat_lower']))
             
-            results.ix[i, 'train_err'] = avg_train_error
-            results.ix[i, 'train_range'] = avg_train_uncertainty
+            results['train_err'].iloc[i] = avg_train_error
+            results['train_range'].iloc[i] = avg_train_uncertainty
             
             # Testing results and metrics
             test_results = pd.merge(test, future[['ds', 'yhat', 'yhat_upper', 'yhat_lower']], on = 'ds', how = 'inner')
             avg_test_error = np.mean(abs(test_results['y'] - test_results['yhat']))
             avg_test_uncertainty = np.mean(abs(test_results['yhat_upper'] - test_results['yhat_lower']))
             
-            results.ix[i, 'test_err'] = avg_test_error
-            results.ix[i, 'test_range'] = avg_test_uncertainty
+            results['test_err'].iloc[i] = avg_test_error
+            results['test_range'].iloc[i] = avg_test_uncertainty
 
         print(results)
 
